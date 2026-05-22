@@ -1,3 +1,4 @@
 template-file-path: templates/main.yml
-
-stack-name: photo-gallery
+parameters:
+  TemplatesBucketUrl: https://photo-gallery-templates.s3.eu-central-1.amazonaws.com
+tags: {}
