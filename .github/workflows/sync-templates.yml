@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -26,8 +28,16 @@ jobs:
 
       - name: Upload changed templates to S3
         run: |
-          git diff --name-status ${{ github.event.before }} ${{ github.sha }} \
-            -- 'templates/*.yml' 'templates/*.yaml' \
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
+            DIFF_CMD="git diff-tree --no-commit-id -r --name-status $AFTER"
+          else
+            DIFF_CMD="git diff --name-status $BEFORE $AFTER"
+          fi
+
+          $DIFF_CMD -- 'templates/*.yml' 'templates/*.yaml' \
           | while read status file; do
               filename=$(basename "$file")
               if [ "$status" = "D" ]; then
