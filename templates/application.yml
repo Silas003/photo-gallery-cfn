@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  SubnetGroup1:
+    Type: String
+  SubnetGroup2:
+    Type: String
+  VpcId:
+    Type: String
+
+  ALBName:
+    Type: String
+    Default: photos-gallery-ecs-load-balancer
+
+  ListenerPort:
+    Type: Number
+    Default: 80
+
+  TestListenerPort:
+    Type: Number
+    Default: 8081
+
+  TargetGroupName:
+    Type: String
+    Default: photos-gallery-target-group-blue
+
+  GreenTargetGroupName:
+    Type: String
+    Default: photos-gallery-target-group-green
+
+  TargetGroupPort:
+    Type: Number
+    Default: 8080
+
+Resources:
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Ref ALBName
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Ref SubnetGroup1
+        - !Ref SubnetGroup2
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: "true"
+      Tags:
+        - Key: Name
+          Value: !Ref ALBName
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB Security Group
+      GroupName: ALBSecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ListenerPort
+          ToPort: !Ref ListenerPort
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: !Ref TestListenerPort
+          ToPort: !Ref TestListenerPort
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: PhotoGalleryALBSecurityGroupup
+      VpcId: !Ref VpcId
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: !Ref ListenerPort
+      Protocol: HTTP
+
+  TestListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: ALBListener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref GreenTargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: !Ref TestListenerPort
+      Protocol: HTTP
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Name: !Ref TargetGroupName
+      Port: !Ref TargetGroupPort
+      Protocol: HTTP
+      Tags:
+        - Key: Name
+          Value: ALBTargetGroup
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  GreenTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Name: !Ref GreenTargetGroupName
+      Port: !Ref TargetGroupPort
+      Protocol: HTTP
+      Tags:
+        - Key: Name
+          Value: !Ref GreenTargetGroupName
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+Outputs:
+  ALBSecurityGroupId:
+    Value: !Ref ALBSecurityGroup
+    Description: ALB Security Group ID
+
+  ALBTargetGroupArn:
+    Value: !Ref ALBTargetGroup
+    Description: Blue target group ARN
+
+  ALBListenerArn:
+    Value: !Ref ALBListener
+    Description: Production listener ARN
+
+  TestListenerArn:
+    Value: !Ref TestListener
+    Description: Test listener ARN for CodeDeploy green validation
+
+  BlueTargetGroupName:
+    Value: !GetAtt ALBTargetGroup.TargetGroupName
+    Description: Blue target group name
+
+  GreenTargetGroupName:
+    Value: !GetAtt GreenTargetGroup.TargetGroupName
+    Description: Green target group name
+
+  ALBDnsName:
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Description: ALB DNS name — point your Route53 record here

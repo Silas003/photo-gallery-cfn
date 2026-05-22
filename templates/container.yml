@@ -1,0 +1,274 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Image:
+    Type: String
+    Default: 266735814394.dkr.ecr.eu-central-1.amazonaws.com/photo-gallery:latest
+    Description: The image to use for the container
+
+  TaskCPU:
+    Type: Number
+    Description: The number of CPU units for the task
+    Default: 256
+    AllowedValues:
+      - 256
+      - 512
+      - 1024
+
+  TaskMemory:
+    Type: Number
+    Description: The number of MiB of memory used by the task
+    Default: 512
+    AllowedValues:
+      - 256
+      - 512
+      - 1024
+      - 2048
+
+  PrivateSubnet1:
+    Type: String
+    Description: The first private subnet to use for the cluster
+
+  PrivateSubnet2:
+    Type: String
+    Description: The second private subnet to use for the cluster
+
+  VpcId:
+    Type: String
+    Description: The VPC ID where the cluster will be deployed
+
+  ALBSecurityGroup:
+    Type: String
+    Description: The security group of the ALB
+
+  TargetGroupArn:
+    Type: String
+    Description: The ARN of the ALB target group
+
+  ContainerName:
+    Type: String
+    Default: notes
+
+  ContainerPort:
+    Type: Number
+    Default: 8080
+
+  LogGroupName:
+    Type: String
+    Default: /ecs/photo_gallery
+
+  LogRetentionDays:
+    Type: Number
+    Default: 30
+
+  ClusterName:
+    Type: String
+    Default: PhotosCluster
+
+  ServiceName:
+    Type: String
+    Default: photos-service
+
+  DesiredCount:
+    Type: Number
+    Default: 1
+
+  AutoScalingMinCapacity:
+    Type: Number
+    Default: 1
+
+  AutoScalingMaxCapacity:
+    Type: Number
+    Default: 4
+
+  CPUScalingTarget:
+    Type: Number
+    Default: 50
+
+  ScaleInCooldown:
+    Type: Number
+    Default: 300
+
+  ScaleOutCooldown:
+    Type: Number
+    Default: 60
+
+  RepositoryName:
+    Type: String
+    Default: photo-gallery
+
+Resources:
+  PhotosLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref LogGroupName
+      RetentionInDays: !Ref LogRetentionDays
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Image: !Ref Image
+          Essential: true
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              HostPort: !Ref ContainerPort
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref PhotosLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref ContainerName
+
+      Cpu: !Ref TaskCPU
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      Family: !Ref ServiceName
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Tags:
+        - Key: Name
+          Value: !Ref ServiceName
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+
+  ECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      EncryptionConfiguration:
+        EncryptionType: KMS
+      ImageTagMutability: IMMUTABLE
+      RepositoryName: !Ref RepositoryName
+      Tags:
+        - Key: Name
+          Value: !Ref RepositoryName
+
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: notes-task-execution-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: notes-task-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ECSTaskPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}*'
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ServiceName}/*'
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+      CapacityProviders:
+        - FARGATE
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+      Configuration:
+        ExecuteCommandConfiguration:
+          Logging: DEFAULT
+
+  ECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      HealthCheckGracePeriodSeconds: 300
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref ECSCluster
+      DesiredCount: !Ref DesiredCount
+      DeploymentController:
+        Type: CODE_DEPLOY
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - ContainerName: !Ref ContainerName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroupArn
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Security Group
+      GroupName: ECS-Security-Group
+      SecurityGroupIngress:
+        - Description: Linked to ALB
+          FromPort: !Ref ContainerPort
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+          ToPort: !Ref ContainerPort
+      Tags:
+        - Key: Name
+          Value: ECS Security Group
+      VpcId: !Ref VpcId
+
+  ECSServiceAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: ECSService
+    Properties:
+      MaxCapacity: !Ref AutoScalingMaxCapacity
+      MinCapacity: !Ref AutoScalingMinCapacity
+      ResourceId: !Sub 'service/${ECSCluster}/${ServiceName}'
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  ECSServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: ecs-service-scaling-policy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ECSServiceAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: !Ref CPUScalingTarget
+        ScaleInCooldown: !Ref ScaleInCooldown
+        ScaleOutCooldown: !Ref ScaleOutCooldown
+
+Outputs:
+  ECSClusterName:
+    Value: !Ref ECSCluster
+    Description: ECS Cluster name
+
+  ECSServiceName:
+    Value: !Ref ServiceName
+    Description: ECS Service name
