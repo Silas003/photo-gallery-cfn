@@ -1,0 +1,40 @@
+name: Sync CloudFormation Templates to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'templates/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION}}
+
+      - name: Upload changed templates to S3
+        run: |
+          git diff --name-status ${{ github.event.before }} ${{ github.sha }} \
+            -- 'templates/*.yml' 'templates/*.yaml' \
+          | while read status file; do
+              filename=$(basename "$file")
+              if [ "$status" = "D" ]; then
+                echo "Deleting s3://photo-gallery-templates/$filename"
+                aws s3 rm "s3://photo-gallery-templates/$filename"
+              else
+                echo "Uploading $file -> s3://photo-gallery-templates/$filename"
+                aws s3 cp "$file" "s3://photo-gallery-templates/$filename"
+              fi
+            done
