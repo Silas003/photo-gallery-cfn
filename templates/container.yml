@@ -47,7 +47,7 @@ Parameters:
 
   ContainerName:
     Type: String
-    Default: notes
+    Default: photos
 
   ContainerPort:
     Type: Number
@@ -71,7 +71,7 @@ Parameters:
 
   DesiredCount:
     Type: Number
-    Default: 1
+    Default: 0
 
   AutoScalingMinCapacity:
     Type: Number
@@ -174,7 +174,7 @@ Resources:
   TaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: notes-task-execution-role
+      RoleName: !Sub '${ServiceName}-task-execution-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -188,7 +188,7 @@ Resources:
   ECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: notes-task-role
+      RoleName: !Sub '${ServiceName}-task-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -308,6 +308,14 @@ Outputs:
   ECSServiceName:
     Value: !Ref ServiceName
     Description: ECS Service name
+
+  TaskExecutionRoleArn:
+    Value: !GetAtt TaskExecutionRole.Arn
+    Description: ECS task execution role ARN
+
+  TaskRoleArn:
+    Value: !GetAtt ECSTaskRole.Arn
+    Description: ECS task role ARN
 
   PhotosBucketName:
     Value: !Ref PhotosBucket

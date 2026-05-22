@@ -4,11 +4,11 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::266735814394:role/photos-task-execution-role",
-  "taskRoleArn": "arn:aws:iam::266735814394:role/photos-task-role",
+  "executionRoleArn": "<TASK_EXECUTION_ROLE_ARN>",
+  "taskRoleArn": "<TASK_ROLE_ARN>",
   "containerDefinitions": [
     {
-      "name": "notes",
+      "name": "photos",
       "image": "<IMAGE1_NAME>",
       "essential": true,
       "portMappings": [
