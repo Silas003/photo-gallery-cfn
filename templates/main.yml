@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  TemplatesBucketUrl:
+    Type: String
+    Default: https://photo-gallery-templates.s3.eu-central-1.amazonaws.com
+
+Resources:
+  NetworkingStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub '${TemplatesBucketUrl}/network.yml'
+
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub '${TemplatesBucketUrl}/application.yml'
+      Parameters:
+        SubnetGroup1: !GetAtt NetworkingStack.Outputs.PublicSubnet1Id
+        SubnetGroup2: !GetAtt NetworkingStack.Outputs.PublicSubnet2Id
+        VpcId: !GetAtt NetworkingStack.Outputs.VPCId
+
+  ContainersStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub '${TemplatesBucketUrl}/container.yml'
+      Parameters:
+        PrivateSubnet1: !GetAtt NetworkingStack.Outputs.PrivateSubnet1Id
+        PrivateSubnet2: !GetAtt NetworkingStack.Outputs.PrivateSubnet2Id
+        VpcId: !GetAtt NetworkingStack.Outputs.VPCId
+        ALBSecurityGroup: !GetAtt ALBStack.Outputs.ALBSecurityGroupId
+        TargetGroupArn: !GetAtt ALBStack.Outputs.ALBTargetGroupArn
+
+  PipelineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub '${TemplatesBucketUrl}/pipeline.yml'
+      Parameters:
+        ECSClusterName: !GetAtt ContainersStack.Outputs.ECSClusterName
+        ECSServiceName: !GetAtt ContainersStack.Outputs.ECSServiceName
+        ALBListenerArn: !GetAtt ALBStack.Outputs.ALBListenerArn
+        TestListenerArn: !GetAtt ALBStack.Outputs.TestListenerArn
+        BlueTargetGroupName: !GetAtt ALBStack.Outputs.BlueTargetGroupName
+        GreenTargetGroupName: !GetAtt ALBStack.Outputs.GreenTargetGroupName
