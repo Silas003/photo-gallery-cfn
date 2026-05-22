@@ -10,7 +10,7 @@ Parameters:
 
   ALBName:
     Type: String
-    Default: photos-gallery-ecs-load-balancer
+    Default: photos-load-balancer
 
   ListenerPort:
     Type: Number
@@ -22,11 +22,11 @@ Parameters:
 
   TargetGroupName:
     Type: String
-    Default: photos-gallery-target-group-blue
+    Default: photos-target-group-blue
 
   GreenTargetGroupName:
     Type: String
-    Default: photos-gallery-target-group-green
+    Default: photos-target-group-green
 
   TargetGroupPort:
     Type: Number
