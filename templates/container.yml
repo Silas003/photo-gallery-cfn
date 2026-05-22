@@ -97,6 +97,11 @@ Parameters:
     Type: String
     Default: photo-gallery
 
+  PhotosBucketName:
+    Type: String
+    Default: photo-gallery-uploads
+    Description: Name of the S3 bucket for photo storage
+
 Resources:
   PhotosLogGroup:
     Type: AWS::Logs::LogGroup
@@ -115,6 +120,9 @@ Resources:
             - ContainerPort: !Ref ContainerPort
               HostPort: !Ref ContainerPort
               Protocol: tcp
+          Environment:
+            - Name: S3_BUCKET_NAME
+              Value: !Sub '${PhotosBucketName}-${AWS::AccountId}-${AWS::Region}'
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -145,6 +153,23 @@ Resources:
         - Key: Name
           Value: !Ref RepositoryName
 
+
+  PhotosBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${PhotosBucketName}-${AWS::AccountId}-${AWS::Region}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Ref PhotosBucketName
 
   TaskExecutionRole:
     Type: AWS::IAM::Role
@@ -186,6 +211,17 @@ Resources:
                   - ssm:GetParameters
                   - secretsmanager:GetSecretValue
                 Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ServiceName}/*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub '${PhotosBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !GetAtt PhotosBucket.Arn
 
   ECSCluster:
     Type: AWS::ECS::Cluster
@@ -272,3 +308,11 @@ Outputs:
   ECSServiceName:
     Value: !Ref ServiceName
     Description: ECS Service name
+
+  PhotosBucketName:
+    Value: !Ref PhotosBucket
+    Description: S3 bucket name for photo storage
+
+  PhotosBucketArn:
+    Value: !GetAtt PhotosBucket.Arn
+    Description: S3 bucket ARN for photo storage
