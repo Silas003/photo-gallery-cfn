@@ -147,7 +147,7 @@ Resources:
     Properties:
       EncryptionConfiguration:
         EncryptionType: KMS
-      ImageTagMutability: IMMUTABLE
+      ImageTagMutability: MUTABLE
       RepositoryName: !Ref RepositoryName
       Tags:
         - Key: Name
