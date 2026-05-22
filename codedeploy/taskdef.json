@@ -1,0 +1,31 @@
+{
+  "family": "photos-gallery-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::266735814394:role/photos-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::266735814394:role/photos-task-role",
+  "containerDefinitions": [
+    {
+      "name": "notes",
+      "image": "<IMAGE1_NAME>",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/photo_gallery",
+          "awslogs-region": "eu-central-1",
+          "awslogs-stream-prefix": "photos"
+        }
+      }
+    }
+  ]
+}
