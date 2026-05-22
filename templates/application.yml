@@ -43,9 +43,7 @@ Resources:
       Subnets:
         - !Ref SubnetGroup1
         - !Ref SubnetGroup2
-      LoadBalancerAttributes:
-        - Key: deletion_protection.enabled
-          Value: "true"
+
       Tags:
         - Key: Name
           Value: !Ref ALBName
