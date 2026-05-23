@@ -32,6 +32,10 @@ Parameters:
     Type: Number
     Default: 8080
 
+  StaticBucketName:
+    Type: String
+    Default: photo-gallery-dir
+
 Resources:
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -140,6 +144,81 @@ Resources:
           ViewerProtocolPolicy: allow-all
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
 
+  PhotoGalleryDirBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${StaticBucketName}-${AWS::AccountId}-${AWS::Region}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Ref StaticBucketName
+
+  StaticOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${StaticBucketName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  PhotoGalleryDirBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PhotoGalleryDirBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${PhotoGalleryDirBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${StaticCloudFrontDistribution}'
+
+  StaticCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt PhotoGalleryDirBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt StaticOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        Tags:
+          - Key: Name
+            Value: !Ref StaticBucketName
+
 Outputs:
   ALBSecurityGroupId:
     Value: !Ref ALBSecurityGroup
@@ -168,3 +247,15 @@ Outputs:
   ALBDnsName:
     Value: !GetAtt ApplicationLoadBalancer.DNSName
     Description: ALB DNS name — point your Route53 record here
+
+  StaticBucketName:
+    Value: !Ref PhotoGalleryDirBucket
+    Description: S3 bucket name for static content
+
+  StaticBucketArn:
+    Value: !GetAtt PhotoGalleryDirBucket.Arn
+    Description: S3 bucket ARN for static content
+
+  StaticCloudFrontDomain:
+    Value: !GetAtt StaticCloudFrontDistribution.DomainName
+    Description: CloudFront domain for serving static content

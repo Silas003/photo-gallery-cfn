@@ -102,6 +102,18 @@ Parameters:
     Default: photo-gallery-uploads
     Description: Name of the S3 bucket for photo storage
 
+  StaticBucketName:
+    Type: String
+    Description: Name of the photo-gallery-dir S3 bucket
+
+  StaticBucketArn:
+    Type: String
+    Description: ARN of the photo-gallery-dir S3 bucket
+
+  CloudFrontDomain:
+    Type: String
+    Description: CloudFront domain name for serving static content
+
 Resources:
   PhotosLogGroup:
     Type: AWS::Logs::LogGroup
@@ -123,6 +135,10 @@ Resources:
           Environment:
             - Name: S3_BUCKET_NAME
               Value: !Sub '${PhotosBucketName}-${AWS::AccountId}-${AWS::Region}'
+            - Name: STATIC_BUCKET_NAME
+              Value: !Ref StaticBucketName
+            - Name: CLOUDFRONT_DOMAIN
+              Value: !Ref CloudFrontDomain
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -222,6 +238,17 @@ Resources:
                   - s3:ListBucket
                   - s3:GetBucketLocation
                 Resource: !GetAtt PhotosBucket.Arn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub '${StaticBucketArn}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !Ref StaticBucketArn
 
   ECSCluster:
     Type: AWS::ECS::Cluster

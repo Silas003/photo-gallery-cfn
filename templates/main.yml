@@ -30,6 +30,9 @@ Resources:
         VpcId: !GetAtt NetworkingStack.Outputs.VPCId
         ALBSecurityGroup: !GetAtt ALBStack.Outputs.ALBSecurityGroupId
         TargetGroupArn: !GetAtt ALBStack.Outputs.ALBTargetGroupArn
+        StaticBucketName: !GetAtt ALBStack.Outputs.StaticBucketName
+        StaticBucketArn: !GetAtt ALBStack.Outputs.StaticBucketArn
+        CloudFrontDomain: !GetAtt ALBStack.Outputs.StaticCloudFrontDomain
 
   PipelineStack:
     Type: AWS::CloudFormation::Stack
