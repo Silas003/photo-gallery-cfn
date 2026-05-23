@@ -1,5 +1,5 @@
 {
-  "family": "photos-gallery-service",
+  "family": "photos-service",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
