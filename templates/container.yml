@@ -345,6 +345,7 @@ Resources:
       AllocatedStorage: '20'
       StorageType: gp3
       StorageEncrypted: true
+      MasterUsername: pgadmin
       ManageMasterUserPassword: true
       MultiAZ: false
       PubliclyAccessible: false
