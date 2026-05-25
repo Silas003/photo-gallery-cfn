@@ -36,6 +36,11 @@ Parameters:
     Type: String
     Default: photo-gallery-dir
 
+  CloudFrontPrefixListId:
+    Type: String
+    Default: pl-a3a144ca
+    Description: AWS managed prefix list ID for CloudFront origin-facing IPs (eu-central-1 default)
+
 Resources:
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -61,11 +66,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref ListenerPort
           ToPort: !Ref ListenerPort
-          CidrIp: 0.0.0.0/0
+          SourcePrefixListId: !Ref CloudFrontPrefixListId
         - IpProtocol: tcp
           FromPort: !Ref TestListenerPort
           ToPort: !Ref TestListenerPort
-          CidrIp: 0.0.0.0/0
+          SourcePrefixListId: !Ref CloudFrontPrefixListId
       Tags:
         - Key: Name
           Value: PhotoGalleryALBSecurityGroupup

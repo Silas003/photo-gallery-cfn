@@ -109,6 +109,14 @@ Parameters:
     Type: String
     Description: CloudFront domain name for serving static content
 
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+
+  DBName:
+    Type: String
+    Default: photogallery
+
 Resources:
   PhotosLogGroup:
     Type: AWS::Logs::LogGroup
@@ -132,6 +140,14 @@ Resources:
               Value: !Ref StaticBucketName
             - Name: CLOUDFRONT_DOMAIN
               Value: !Ref CloudFrontDomain
+            - Name: DB_HOST
+              Value: !GetAtt RDSInstance.Endpoint.Address
+            - Name: DB_PORT
+              Value: !GetAtt RDSInstance.Endpoint.Port
+            - Name: DB_NAME
+              Value: !Ref DBName
+            - Name: DB_SECRET_ARN
+              Value: !GetAtt RDSInstance.MasterUserSecret.SecretArn
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -201,8 +217,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - ssm:GetParameters
-                  - secretsmanager:GetSecretValue
                 Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ServiceName}/*'
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:rds!*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
@@ -292,6 +312,46 @@ Resources:
         ScaleInCooldown: !Ref ScaleInCooldown
         ScaleOutCooldown: !Ref ScaleOutCooldown
 
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for RDS
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS Security Group
+      GroupName: RDS-Security-Group
+      SecurityGroupIngress:
+        - Description: Allow ECS tasks
+          FromPort: 5432
+          ToPort: 5432
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      VpcId: !Ref VpcId
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceClass: !Ref DBInstanceClass
+      DBName: !Ref DBName
+      Engine: postgres
+      EngineVersion: '16'
+      AllocatedStorage: '20'
+      StorageType: gp3
+      StorageEncrypted: true
+      ManageMasterUserPassword: true
+      MultiAZ: false
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+
 Outputs:
   ECSClusterName:
     Value: !Ref ECSCluster
@@ -308,4 +368,12 @@ Outputs:
   TaskRoleArn:
     Value: !GetAtt ECSTaskRole.Arn
     Description: ECS task role ARN
+
+  DBEndpoint:
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Description: RDS PostgreSQL endpoint
+
+  DBSecretArn:
+    Value: !GetAtt RDSInstance.MasterUserSecret.SecretArn
+    Description: Secrets Manager ARN for RDS master credentials
 

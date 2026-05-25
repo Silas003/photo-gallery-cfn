@@ -34,6 +34,22 @@
         {
           "name": "CLOUDFRONT_DOMAIN",
           "value": "dy7yvr4ud86fv.cloudfront.net"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "<RDS_ENDPOINT>"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "photogallery"
+        },
+        {
+          "name": "DB_SECRET_ARN",
+          "value": "<RDS_SECRET_ARN>"
         }
       ],
       "logConfiguration": {

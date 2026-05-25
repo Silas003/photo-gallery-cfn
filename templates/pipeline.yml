@@ -159,7 +159,7 @@ Resources:
           WaitTimeInMinutes: 0
         TerminateBlueInstancesOnDeploymentSuccess:
           Action: TERMINATE
-          TerminationWaitTimeInMinutes: !Ref TerminationWaitTimeInMinutes
+          TerminationWaitTimeInMinutes: 0
       LoadBalancerInfo:
         TargetGroupPairInfoList:
           - ProdTrafficRoute:
