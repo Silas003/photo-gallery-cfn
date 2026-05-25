@@ -4,8 +4,8 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "<TASK_EXECUTION_ROLE_ARN>",
-  "taskRoleArn": "<TASK_ROLE_ARN>",
+  "executionRoleArn": "arn:aws:iam::266735814394:role/photos-service-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::266735814394:role/photos-service-task-role",
   "containerDefinitions": [
     {
       "name": "photos",
