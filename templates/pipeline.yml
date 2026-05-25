@@ -155,8 +155,8 @@ Resources:
         DeploymentType: BLUE_GREEN
       BlueGreenDeploymentConfiguration:
         DeploymentReadyOption:
-          ActionOnTimeout: STOP_DEPLOYMENT
-          WaitTimeInMinutes: 60
+          ActionOnTimeout: CONTINUE_DEPLOYMENT
+          WaitTimeInMinutes: 0
         TerminateBlueInstancesOnDeploymentSuccess:
           Action: TERMINATE
           TerminationWaitTimeInMinutes: !Ref TerminationWaitTimeInMinutes
