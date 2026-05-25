@@ -18,6 +18,16 @@
           "protocol": "tcp"
         }
       ],
+      "environment": [
+        {
+          "name": "STATIC_BUCKET_NAME",
+          "value": "photo-gallery-dir-266735814394-eu-central-1"
+        },
+        {
+          "name": "CLOUDFRONT_DOMAIN",
+          "value": "d3n1ye0vnezk4b.cloudfront.net"
+        }
+      ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
