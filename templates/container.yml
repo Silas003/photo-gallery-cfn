@@ -266,7 +266,7 @@ Resources:
   ECSService:
     Type: AWS::ECS::Service
     Properties:
-      HealthCheckGracePeriodSeconds: 300
+      HealthCheckGracePeriodSeconds: 315
       ServiceName: !Ref ServiceName
       Cluster: !Ref ECSCluster
       DesiredCount: !Ref DesiredCount
