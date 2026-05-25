@@ -36,10 +36,10 @@ Parameters:
     Type: String
     Default: photo-gallery-dir
 
-  CloudFrontPrefixListId:
+  CloudFrontCustomHeaderValue:
     Type: String
-    Default: pl-a3a144ca
-    Description: AWS managed prefix list ID for CloudFront origin-facing IPs (eu-central-1 default)
+    NoEcho: true
+    Description: Secret value CloudFront sends as X-CloudFront-Secret; ALB blocks requests without it
 
 Resources:
   ApplicationLoadBalancer:
@@ -66,11 +66,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref ListenerPort
           ToPort: !Ref ListenerPort
-          SourcePrefixListId: !Ref CloudFrontPrefixListId
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: !Ref TestListenerPort
           ToPort: !Ref TestListenerPort
-          SourcePrefixListId: !Ref CloudFrontPrefixListId
+          CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: PhotoGalleryALBSecurityGroupup
@@ -80,11 +80,29 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref ALBTargetGroup
+        - Type: fixed-response
+          FixedResponseConfig:
+            StatusCode: '403'
+            ContentType: text/plain
+            MessageBody: Forbidden
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: !Ref ListenerPort
       Protocol: HTTP
+
+  ALBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 1
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: X-CloudFront-Secret
+            Values:
+              - !Ref CloudFrontCustomHeaderValue
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
 
   TestListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -144,6 +162,9 @@ Resources:
             CustomOriginConfig:
               HTTPPort: !Ref ListenerPort
               OriginProtocolPolicy: http-only
+            OriginCustomHeaders:
+              - HeaderName: X-CloudFront-Secret
+                HeaderValue: !Ref CloudFrontCustomHeaderValue
         DefaultCacheBehavior:
           TargetOriginId: ALBOrigin
           ViewerProtocolPolicy: allow-all
