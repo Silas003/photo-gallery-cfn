@@ -40,7 +40,6 @@ Resources:
   CloudFrontSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: photo-gallery-cloudfront-secret
       Description: Auto-generated secret shared between CloudFront and ALB as a custom header
       GenerateSecretString:
         SecretStringTemplate: '{}'
@@ -105,7 +104,7 @@ Resources:
           HttpHeaderConfig:
             HttpHeaderName: X-CloudFront-Secret
             Values:
-              - '{{resolve:secretsmanager:photo-gallery-cloudfront-secret:SecretString:value}}'
+              - !Sub '{{resolve:secretsmanager:${CloudFrontSecret}:SecretString:value}}'
       Actions:
         - Type: forward
           TargetGroupArn: !Ref ALBTargetGroup
@@ -170,7 +169,7 @@ Resources:
               OriginProtocolPolicy: http-only
             OriginCustomHeaders:
               - HeaderName: X-CloudFront-Secret
-                HeaderValue: '{{resolve:secretsmanager:photo-gallery-cloudfront-secret:SecretString:value}}'
+                HeaderValue: !Sub '{{resolve:secretsmanager:${CloudFrontSecret}:SecretString:value}}'
         DefaultCacheBehavior:
           TargetOriginId: ALBOrigin
           ViewerProtocolPolicy: allow-all
