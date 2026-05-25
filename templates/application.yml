@@ -36,12 +36,18 @@ Parameters:
     Type: String
     Default: photo-gallery-dir
 
-  CloudFrontCustomHeaderValue:
-    Type: String
-    NoEcho: true
-    Description: Secret value CloudFront sends as X-CloudFront-Secret; ALB blocks requests without it
-
 Resources:
+  CloudFrontSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: photo-gallery-cloudfront-secret
+      Description: Auto-generated secret shared between CloudFront and ALB as a custom header
+      GenerateSecretString:
+        SecretStringTemplate: '{}'
+        GenerateStringKey: value
+        PasswordLength: 40
+        ExcludePunctuation: true
+
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -99,7 +105,7 @@ Resources:
           HttpHeaderConfig:
             HttpHeaderName: X-CloudFront-Secret
             Values:
-              - !Ref CloudFrontCustomHeaderValue
+              - '{{resolve:secretsmanager:photo-gallery-cloudfront-secret:SecretString:value}}'
       Actions:
         - Type: forward
           TargetGroupArn: !Ref ALBTargetGroup
@@ -164,7 +170,7 @@ Resources:
               OriginProtocolPolicy: http-only
             OriginCustomHeaders:
               - HeaderName: X-CloudFront-Secret
-                HeaderValue: !Ref CloudFrontCustomHeaderValue
+                HeaderValue: '{{resolve:secretsmanager:photo-gallery-cloudfront-secret:SecretString:value}}'
         DefaultCacheBehavior:
           TargetOriginId: ALBOrigin
           ViewerProtocolPolicy: allow-all

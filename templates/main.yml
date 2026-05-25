@@ -5,11 +5,6 @@ Parameters:
     Type: String
     Default: https://photo-gallery-templates.s3.eu-central-1.amazonaws.com
 
-  CloudFrontCustomHeaderValue:
-    Type: String
-    NoEcho: true
-    Description: Secret value CloudFront sends as X-CloudFront-Secret; ALB blocks requests without it
-
 Resources:
   NetworkingStack:
     Type: AWS::CloudFormation::Stack
@@ -24,7 +19,6 @@ Resources:
         SubnetGroup1: !GetAtt NetworkingStack.Outputs.PublicSubnet1Id
         SubnetGroup2: !GetAtt NetworkingStack.Outputs.PublicSubnet2Id
         VpcId: !GetAtt NetworkingStack.Outputs.VPCId
-        CloudFrontCustomHeaderValue: !Ref CloudFrontCustomHeaderValue
 
   ContainersStack:
     Type: AWS::CloudFormation::Stack
