@@ -20,6 +20,14 @@
       ],
       "environment": [
         {
+          "name": "AWS_REGION",
+          "value": "eu-central-1"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "eu-central-1"
+        },
+        {
           "name": "STATIC_BUCKET_NAME",
           "value": "photo-gallery-dir-266735814394-eu-central-1"
         },

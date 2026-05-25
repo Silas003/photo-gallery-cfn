@@ -99,17 +99,14 @@ Parameters:
 
   StaticBucketName:
     Type: String
-    Default: ''
     Description: Name of the photo-gallery-dir S3 bucket
 
   StaticBucketArn:
     Type: String
-    Default: ''
     Description: ARN of the photo-gallery-dir S3 bucket
 
   CloudFrontDomain:
     Type: String
-    Default: ''
     Description: CloudFront domain name for serving static content
 
 Resources:
