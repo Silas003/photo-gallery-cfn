@@ -148,6 +148,11 @@ Resources:
               Value: !Ref DBName
             - Name: DB_SECRET_ARN
               Value: !GetAtt RDSInstance.MasterUserSecret.SecretArn
+          Secrets:
+            - Name: DB_USERNAME
+              ValueFrom: !Sub "${RDSInstance.MasterUserSecret.SecretArn}:username::"
+            - Name: DB_PASSWORD
+              ValueFrom: !Sub "${RDSInstance.MasterUserSecret.SecretArn}:password::"
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -192,6 +197,16 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: ECSExecutionSecretsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:rds!*'
 
   ECSTaskRole:
     Type: AWS::IAM::Role

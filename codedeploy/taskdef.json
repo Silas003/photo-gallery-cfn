@@ -33,11 +33,11 @@
         },
         {
           "name": "CLOUDFRONT_DOMAIN",
-          "value": "dkuafucu8y959.cloudfront.net"
+          "value": "dtjsubulqq63x.cloudfront.net"
         },
         {
           "name": "DB_HOST",
-          "value": "photo-gallery-containersstack-v4yrxows-rdsinstance-ylyjrl5aeikw.cxii6mikg9c3.eu-central-1.rds.amazonaws.com"
+          "value": "photo-gallery-v1-containersstack-18vtt-rdsinstance-a51cxjxi6puv.cxii6mikg9c3.eu-central-1.rds.amazonaws.com"
         },
         {
           "name": "DB_PORT",
@@ -49,7 +49,7 @@
         },
         {
           "name": "DB_SECRET_ARN",
-          "value": "arn:aws:secretsmanager:eu-central-1:266735814394:secret:rds!db-70d8bb6e-c35a-459f-bb3a-54fbea4603cc-mg5VSW"
+          "value": "arn:aws:secretsmanager:eu-central-1:266735814394:secret:rds!db-60288dcc-e3f0-4071-9fa7-9890210f67eb-v8T0Nd"
         }
       ],
       "logConfiguration": {
