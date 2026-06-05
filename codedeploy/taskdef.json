@@ -33,11 +33,11 @@
         },
         {
           "name": "CLOUDFRONT_DOMAIN",
-          "value": "dtjsubulqq63x.cloudfront.net"
+          "value": "d1fp8v0dvt89o6.cloudfront.net"
         },
         {
           "name": "DB_HOST",
-          "value": "photo-gallery-v1-containersstack-18vtt-rdsinstance-a51cxjxi6puv.cxii6mikg9c3.eu-central-1.rds.amazonaws.com"
+          "value": "photo-gallery-v3-containersstack-10ll2-rdsinstance-h0z3irslrv38.cxii6mikg9c3.eu-central-1.rds.amazonaws.com"
         },
         {
           "name": "DB_PORT",
@@ -49,7 +49,17 @@
         },
         {
           "name": "DB_SECRET_ARN",
-          "value": "arn:aws:secretsmanager:eu-central-1:266735814394:secret:rds!db-60288dcc-e3f0-4071-9fa7-9890210f67eb-v8T0Nd"
+          "value": "arn:aws:secretsmanager:eu-central-1:266735814394:secret:rds!db-69799815-cf70-448b-a139-932da9996a9b-4ApMRh"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:266735814394:secret:rds!db-69799815-cf70-448b-a139-932da9996a9b-4ApMRh:username::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:266735814394:secret:rds!db-69799815-cf70-448b-a139-932da9996a9b-4ApMRh:password::"
         }
       ],
       "logConfiguration": {
