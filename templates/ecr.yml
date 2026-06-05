@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  RepositoryName:
+    Type: String
+    Default: photo-gallery
+
+Resources:
+  ECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      EncryptionConfiguration:
+        EncryptionType: KMS
+      ImageTagMutability: MUTABLE
+      RepositoryName: !Ref RepositoryName
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire untagged images after 1 day",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 1
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 2,
+                "description": "Keep only the last 10 tagged images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPrefixList": ["v"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+      Tags:
+        - Key: Name
+          Value: !Ref RepositoryName
+
+Outputs:
+  RepositoryName:
+    Value: !Ref ECR
+    Description: ECR repository name
+
+  RepositoryUri:
+    Value: !GetAtt ECR.RepositoryUri
+    Description: ECR repository URI

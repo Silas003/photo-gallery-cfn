@@ -72,10 +72,6 @@ Resources:
           FromPort: !Ref ListenerPort
           ToPort: !Ref ListenerPort
           CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: !Ref TestListenerPort
-          ToPort: !Ref TestListenerPort
-          CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: PhotoGalleryALBSecurityGroupup
@@ -125,7 +121,7 @@ Resources:
     Properties:
       HealthCheckEnabled: true
       HealthCheckPath: /health
-      HealthCheckIntervalSeconds: 30
+      HealthCheckIntervalSeconds: 15
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 3
@@ -143,7 +139,7 @@ Resources:
     Properties:
       HealthCheckEnabled: true
       HealthCheckPath: /health
-      HealthCheckIntervalSeconds: 30
+      HealthCheckIntervalSeconds: 15
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 3

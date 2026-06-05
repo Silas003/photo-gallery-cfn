@@ -71,7 +71,7 @@ Parameters:
 
   DesiredCount:
     Type: Number
-    Default: 1
+    Default: 0
 
   AutoScalingMinCapacity:
     Type: Number
@@ -92,10 +92,6 @@ Parameters:
   ScaleOutCooldown:
     Type: Number
     Default: 60
-
-  RepositoryName:
-    Type: String
-    Default: photo-gallery
 
   StaticBucketName:
     Type: String
@@ -171,18 +167,6 @@ Resources:
         - Key: Name
           Value: !Ref ServiceName
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
-
-  ECR:
-    Type: AWS::ECR::Repository
-    Properties:
-      EncryptionConfiguration:
-        EncryptionType: KMS
-      ImageTagMutability: MUTABLE
-      RepositoryName: !Ref RepositoryName
-      Tags:
-        - Key: Name
-          Value: !Ref RepositoryName
-
 
   TaskExecutionRole:
     Type: AWS::IAM::Role
@@ -266,7 +250,7 @@ Resources:
   ECSService:
     Type: AWS::ECS::Service
     Properties:
-      HealthCheckGracePeriodSeconds: 315
+      HealthCheckGracePeriodSeconds: 60
       ServiceName: !Ref ServiceName
       Cluster: !Ref ECSCluster
       DesiredCount: !Ref DesiredCount
