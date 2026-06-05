@@ -36,6 +36,10 @@
           "value": "d1fp8v0dvt89o6.cloudfront.net"
         },
         {
+        "name":"ALB_CLOUDFRONT_DOMAIN",
+          "value":"d1a2akvhn35ubj.cloudfront.net"
+        },
+        {
           "name": "DB_HOST",
           "value": "photo-gallery-v3-containersstack-10ll2-rdsinstance-h0z3irslrv38.cxii6mikg9c3.eu-central-1.rds.amazonaws.com"
         },
