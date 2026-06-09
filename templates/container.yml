@@ -73,7 +73,7 @@ Parameters:
 
   DesiredCount:
     Type: Number
-    Default: 0
+    Default: 1
 
   AutoScalingMinCapacity:
     Type: Number
@@ -251,6 +251,7 @@ Resources:
 
   ECSService:
     Type: AWS::ECS::Service
+    DependsOn: TaskDefinition
     Properties:
       HealthCheckGracePeriodSeconds: 60
       ServiceName: !Ref ServiceName
@@ -267,7 +268,7 @@ Resources:
           Subnets:
             - !Ref PrivateSubnet1
             - !Ref PrivateSubnet2
-      TaskDefinition: !Ref TaskDefinition
+      TaskDefinition: !Ref ServiceName
       LoadBalancers:
         - ContainerName: !Ref ContainerName
           ContainerPort: !Ref ContainerPort
