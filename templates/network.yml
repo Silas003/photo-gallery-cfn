@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: Networking for the CDK workshop
+Description: VPC, subnets, routing, and VPC endpoints for the Photo Gallery application
 
 Parameters:
   VpcCidr:

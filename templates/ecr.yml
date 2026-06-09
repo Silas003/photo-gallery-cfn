@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+Description: ECR repository for the Photo Gallery application
+
 Parameters:
   RepositoryName:
     Type: String
@@ -11,6 +13,8 @@ Resources:
     Properties:
       EncryptionConfiguration:
         EncryptionType: KMS
+      ImageScanningConfiguration:
+        ScanOnPush: true
       ImageTagMutability: MUTABLE
       RepositoryName: !Ref RepositoryName
       LifecyclePolicy:

@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+Description: ECS cluster, Fargate service, task definition, IAM roles, auto-scaling, and RDS for the Photo Gallery application
+
 Parameters:
   Image:
     Type: String
@@ -71,7 +73,7 @@ Parameters:
 
   DesiredCount:
     Type: Number
-    Default: 1
+    Default: 0
 
   AutoScalingMinCapacity:
     Type: Number
@@ -105,6 +107,10 @@ Parameters:
     Type: String
     Description: CloudFront domain name for serving static content
 
+  ALBCloudFrontDomain:
+    Type: String
+    Description: CloudFront domain name in front of the ALB
+
   DBInstanceClass:
     Type: String
     Default: db.t3.micro
@@ -136,6 +142,8 @@ Resources:
               Value: !Ref StaticBucketName
             - Name: CLOUDFRONT_DOMAIN
               Value: !Ref CloudFrontDomain
+            - Name: ALB_CLOUDFRONT_DOMAIN
+              Value: !Ref ALBCloudFrontDomain
             - Name: DB_HOST
               Value: !GetAtt RDSInstance.Endpoint.Address
             - Name: DB_PORT
@@ -294,7 +302,6 @@ Resources:
       MaxCapacity: !Ref AutoScalingMaxCapacity
       MinCapacity: !Ref AutoScalingMinCapacity
       ResourceId: !Sub 'service/${ECSCluster}/${ServiceName}'
-      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
 
@@ -348,6 +355,7 @@ Resources:
       ManageMasterUserPassword: true
       MultiAZ: false
       PubliclyAccessible: false
+      BackupRetentionPeriod: 7
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref DBSecurityGroup

@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+Description: CodePipeline, CodeDeploy, and EventBridge rule for blue-green ECS deployments of the Photo Gallery application
+
 Parameters:
   ECSClusterName:
     Type: String
@@ -36,6 +38,11 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
   AppSpecSourceBucket:
     Type: AWS::S3::Bucket
@@ -47,6 +54,11 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
   CodePipelineRole:
     Type: AWS::IAM::Role
@@ -159,7 +171,7 @@ Resources:
           WaitTimeInMinutes: 0
         TerminateBlueInstancesOnDeploymentSuccess:
           Action: TERMINATE
-          TerminationWaitTimeInMinutes: 0
+          TerminationWaitTimeInMinutes: !Ref TerminationWaitTimeInMinutes
       LoadBalancerInfo:
         TargetGroupPairInfoList:
           - ProdTrafficRoute:
@@ -250,6 +262,8 @@ Resources:
             - PUSH
           repository-name:
             - !Ref ECRRepositoryName
+          image-tag:
+            - latest
           result:
             - SUCCESS
       State: ENABLED

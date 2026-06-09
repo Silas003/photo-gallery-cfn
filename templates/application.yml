@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+Description: ALB, CloudFront distributions, target groups, and S3 static bucket for the Photo Gallery application
+
 Parameters:
   SubnetGroup1:
     Type: String
@@ -74,7 +76,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: PhotoGalleryALBSecurityGroupup
+          Value: PhotoGalleryALBSecurityGroup
       VpcId: !Ref VpcId
 
   ALBListener:
@@ -157,6 +159,7 @@ Resources:
     Properties:
       DistributionConfig:
         Enabled: true
+        PriceClass: PriceClass_200
         Origins:
           - Id: ALBOrigin
             DomainName: !GetAtt ApplicationLoadBalancer.DNSName
@@ -168,7 +171,7 @@ Resources:
                 HeaderValue: !Sub '{{resolve:secretsmanager:${CloudFrontSecret}:SecretString:value}}'
         DefaultCacheBehavior:
           TargetOriginId: ALBOrigin
-          ViewerProtocolPolicy: allow-all
+          ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
 
   PhotoGalleryDirBucket:
@@ -218,6 +221,7 @@ Resources:
     Properties:
       DistributionConfig:
         Enabled: true
+        PriceClass: PriceClass_200
         DefaultRootObject: index.html
         Origins:
           - Id: S3Origin
@@ -274,6 +278,10 @@ Outputs:
   ALBDnsName:
     Value: !GetAtt ApplicationLoadBalancer.DNSName
     Description: ALB DNS name — point your Route53 record here
+
+  ALBCloudFrontDomain:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Description: CloudFront domain in front of the ALB
 
   StaticBucketName:
     Value: !Ref PhotoGalleryDirBucket

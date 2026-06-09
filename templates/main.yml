@@ -39,6 +39,7 @@ Resources:
         StaticBucketName: !GetAtt ALBStack.Outputs.StaticBucketName
         StaticBucketArn: !GetAtt ALBStack.Outputs.StaticBucketArn
         CloudFrontDomain: !GetAtt ALBStack.Outputs.StaticCloudFrontDomain
+        ALBCloudFrontDomain: !GetAtt ALBStack.Outputs.ALBCloudFrontDomain
 
   PipelineStack:
     Type: AWS::CloudFormation::Stack
