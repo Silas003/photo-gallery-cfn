@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: ALB, CloudFront distributions, target groups, and S3 static bucket for the Photo Gallery application
+Description: ALB, target groups, and S3 static bucket for the Photo Gallery application
 
 Parameters:
   SubnetGroup1:
@@ -39,16 +39,6 @@ Parameters:
     Default: photo-gallery-dir
 
 Resources:
-  CloudFrontSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Description: Auto-generated secret shared between CloudFront and ALB as a custom header
-      GenerateSecretString:
-        SecretStringTemplate: '{}'
-        GenerateStringKey: value
-        PasswordLength: 40
-        ExcludePunctuation: true
-
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -83,29 +73,11 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - Type: fixed-response
-          FixedResponseConfig:
-            StatusCode: '403'
-            ContentType: text/plain
-            MessageBody: Forbidden
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: !Ref ListenerPort
       Protocol: HTTP
-
-  ALBListenerRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      ListenerArn: !Ref ALBListener
-      Priority: 1
-      Conditions:
-        - Field: http-header
-          HttpHeaderConfig:
-            HttpHeaderName: X-CloudFront-Secret
-            Values:
-              - !Sub '{{resolve:secretsmanager:${CloudFrontSecret}:SecretString:value}}'
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref ALBTargetGroup
 
   TestListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -153,26 +125,6 @@ Resources:
           Value: !Ref GreenTargetGroupName
       TargetType: ip
       VpcId: !Ref VpcId
-
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        PriceClass: PriceClass_200
-        Origins:
-          - Id: ALBOrigin
-            DomainName: !GetAtt ApplicationLoadBalancer.DNSName
-            CustomOriginConfig:
-              HTTPPort: !Ref ListenerPort
-              OriginProtocolPolicy: http-only
-            OriginCustomHeaders:
-              - HeaderName: X-CloudFront-Secret
-                HeaderValue: !Sub '{{resolve:secretsmanager:${CloudFrontSecret}:SecretString:value}}'
-        DefaultCacheBehavior:
-          TargetOriginId: ALBOrigin
-          ViewerProtocolPolicy: redirect-to-https
-          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
 
   PhotoGalleryDirBucket:
     Type: AWS::S3::Bucket
@@ -278,10 +230,6 @@ Outputs:
   ALBDnsName:
     Value: !GetAtt ApplicationLoadBalancer.DNSName
     Description: ALB DNS name — point your Route53 record here
-
-  ALBCloudFrontDomain:
-    Value: !GetAtt CloudFrontDistribution.DomainName
-    Description: CloudFront domain in front of the ALB
 
   StaticBucketName:
     Value: !Ref PhotoGalleryDirBucket

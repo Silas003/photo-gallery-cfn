@@ -33,11 +33,7 @@
         },
         {
           "name": "CLOUDFRONT_DOMAIN",
-          "value": "d1fp8v0dvt89o6.cloudfront.net"
-        },
-        {
-        "name":"ALB_CLOUDFRONT_DOMAIN",
-          "value":"d1a2akvhn35ubj.cloudfront.net"
+          "value": "d3kskr74ao0ht8.cloudfront.net"
         },
         {
           "name": "DB_HOST",

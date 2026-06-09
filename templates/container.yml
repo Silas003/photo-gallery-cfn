@@ -107,10 +107,6 @@ Parameters:
     Type: String
     Description: CloudFront domain name for serving static content
 
-  ALBCloudFrontDomain:
-    Type: String
-    Description: CloudFront domain name in front of the ALB
-
   DBInstanceClass:
     Type: String
     Default: db.t3.micro
@@ -142,8 +138,6 @@ Resources:
               Value: !Ref StaticBucketName
             - Name: CLOUDFRONT_DOMAIN
               Value: !Ref CloudFrontDomain
-            - Name: ALB_CLOUDFRONT_DOMAIN
-              Value: !Ref ALBCloudFrontDomain
             - Name: DB_HOST
               Value: !GetAtt RDSInstance.Endpoint.Address
             - Name: DB_PORT
